@@ -7,6 +7,7 @@ namespace Remembering
   public class Movement : MonoBehaviour
   {
     [Header("Config")]
+    [Tooltip("The sensibility multiplayer to use (horizontal,vertical)")]
     [SerializeField] private Vector2 _sensibility = new Vector2(0.1f, 0.1f);
     [Tooltip("The y angle clamps in deg as (min,max)")]
     [SerializeField] private Vector2 _yClamps = new Vector2(-150f, -37f);
