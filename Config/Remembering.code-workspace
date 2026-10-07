@@ -141,6 +141,7 @@
     // ── Git ───────────────────────────────────────
     "git.ignoreLimitWarning": true,
     "dotnet.formatting.organizeImportsOnFormat": true,
+    "dotnet.defaultSolution": "Unity/CFGS M11 AA1.1 Remembering.slnx",
   }, // end settings
 
   // ─────────────────────────────────────────────
