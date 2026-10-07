@@ -890,14 +890,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1271573084}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.7935419, y: -0, z: -0, w: 0.6085157}
+  m_LocalRotation: {x: -0.9847411, y: -0, z: -0, w: 0.17402582}
   m_LocalPosition: {x: 0, y: 1.2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 109598193}
   m_Father: {fileID: 1549903835}
-  m_LocalEulerAnglesHint: {x: -105.035, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -159.956, y: 0, z: 0}
 --- !u!1 &1549903834
 GameObject:
   m_ObjectHideFlags: 0
@@ -907,6 +907,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1549903835}
+  - component: {fileID: 1549903836}
   m_Layer: 0
   m_Name: Turret
   m_TagString: Untagged
@@ -931,6 +932,22 @@ Transform:
   - {fileID: 1271573085}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1549903836
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1549903834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9478922e8f21ea49a996a934794d517, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Remembering.Movement
+  _sensibility: {x: 0.1, y: 0.1}
+  _yClamps: {x: -150, y: -37}
+  _turret: {fileID: 1549903835}
+  _pivot: {fileID: 1271573085}
 --- !u!1 &1957100803
 GameObject:
   m_ObjectHideFlags: 0
