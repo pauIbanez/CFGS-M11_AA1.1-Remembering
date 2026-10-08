@@ -35,7 +35,7 @@ Everything is in [Movement.cs](./Assets/Scripts/Movement.cs). In this script the
 </svg>
 ](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/SerializeField.html) variables:
 
-- 2 `Vector2` variables, each with its own [Tooltip <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+- `2` `Vector2` variables, each with its own [Tooltip <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
 	<path d="M0 0h24v24H0z" fill="none" />
 	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
 		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
@@ -47,10 +47,10 @@ Everything is in [Movement.cs](./Assets/Scripts/Movement.cs). In this script the
 	</g>
 </svg>](https://docs.unity3d.com/6000.5/Documentation/ScriptReference/TooltipAttribute.html) explaining what they do.
 
-- 2 `Transform` references for the turret parts
+- `2` References for the turret parts
 
 And these non-serialized `private` variables:
-- 2 decimal numbers, stored as `float`
+- `2` decimal numbers
 
 
 All variables are private because no other part of our program needs them, but some are serialized so they are configurable from the Inspector.
@@ -90,7 +90,29 @@ Lastly, it takes these controlled pitch and yaw values and assigns them as the c
 Small capsules should be fired from the muzzle when you press space. These capsules need to have the muzzle's orientation and be shot in the direction it's facing. The capsules should have gravity and collide with the scene.
 
 #### **Explanation**
-asd
+All shooting is handled in [Shooting.cs](./Assets/Scripts/Shooting.cs). In this script there are the following `private` but [Serialized <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>
+](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/SerializeField.html) variables:
+
+- `1` number to store the projectile force
+- `2` references to store the muzzle point and projectile prefab
+
+All variables are private because no other part of our program needs them, but serialized so they are configurable from the Inspector.
+
+In each update, this script checks it the space key input was fired and if it was it does the following:
+
+1. It first spawns a new GameObject based on the configured prefab in the position and orientation of the muzzle point
+
+2. It grabs the spawned projectil's `Rigidbody` component and adds the configured mizzle force to it as an impulse
 
 ---
 ### **Destruction**
