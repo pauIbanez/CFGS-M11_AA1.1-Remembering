@@ -90,7 +90,7 @@ Lastly, it takes these controlled pitch and yaw values and assigns them as the c
 Small capsules should be fired from the muzzle when you press space. These capsules need to have the muzzle's orientation and be shot in the direction it's facing. The capsules should have gravity and collide with the scene.
 
 #### **Explanation**
-All shooting is handled in [Shooting.cs](./Assets/Scripts/Shooting.cs). In this script there are the following `private` but [Serialized <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+All shooting is handled in [Shoot.cs](./Assets/Scripts/Shoot.cs). In this script there are the following `private` but [Serialized <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
 	<path d="M0 0h24v24H0z" fill="none" />
 	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
 		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
@@ -108,11 +108,23 @@ All shooting is handled in [Shooting.cs](./Assets/Scripts/Shooting.cs). In this 
 
 All variables are private because no other part of our program needs them, but serialized so they are configurable from the Inspector.
 
-In each update, this script checks it the space key input was fired and if it was it does the following:
+In each update, this script checks if the space key was pressed and if it was it does the following:
 
 1. It first spawns a new GameObject based on the configured prefab in the position and orientation of the muzzle point
 
-2. It grabs the spawned projectil's `Rigidbody` component and adds the configured mizzle force to it as an impulse
+2. It grabs the spawned projectile's `Rigidbody` component and adds the configured muzzle force to it as an impulse
+
+3. It tells Unity to [Destroy <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>](https://docs.unity3d.com/6000.5/Documentation/ScriptReference/Object.Destroy.html) the projectile after `3` seconds, so the bullets don't pile up in the scene
 
 ---
 ### **Destruction**
@@ -121,7 +133,91 @@ Download the target models and import them into your project: [Target Models (co
 One of them is the complete target, the other one has the pieces taken apart. When a bullet hits one of the complete targets, it should disappear and spawn the broken target. The broken target should come apart into individual pieces and fall. 3 seconds after the complete target disappears, it has to show up again. The only thing that should be able to destroy the targets is the bullets.
 
 #### **Explanation**
-asd
+All destruction is handled in [Target.cs](./Assets/Scripts/Target.cs), which goes on the root object of each target. In this script there are the following `private` but [Serialized <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>
+](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/SerializeField.html) variables:
+
+- `1` decimal number to store the respawn time (`3` seconds)
+- `2` references to the target's children: the complete model and the broken model
+- `2` decimal numbers to store the impact force and the impact radius, used to push the broken pieces away from where the bullet hit
+
+And this non-serialized `private` variable:
+- `1` reference to the target's own `Collider`, grabbed in `Awake`
+
+All variables are private because no other part of our program needs them, but some are serialized so they are configurable from the Inspector.
+
+The target prefab has both models as children. The complete one starts active, and the broken one starts inactive, with a `Rigidbody` and a convex `MeshCollider` on each of its pieces so they fall apart on their own when they get enabled. The broken child is never shown directly, it is only used as a template to copy.
+
+When something collides with the target, [OnCollisionEnter <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>](https://docs.unity3d.com/6000.5/Documentation/ScriptReference/Collider.OnCollisionEnter.html) is called and the script does the following:
+
+1. It checks if the object that hit it has the `Bullet` tag and if the complete model is currently visible. If not, it does nothing, so only bullets can destroy the targets and a target can't break twice
+
+2. It starts the `Break` [Coroutine <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>](https://docs.unity3d.com/6000.5/Documentation/ScriptReference/MonoBehaviour.StartCoroutine.html), passing it the point where the bullet hit, taken from the first contact of the collision
+
+The `Break` coroutine does the following:
+
+1. It deactivates the complete model and the target's collider, so nothing can hit the invisible target and the broken pieces don't get stuck inside it
+
+2. It spawns a copy of the broken model in the same position, activates it so the pieces fall, and tells Unity to [Destroy <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>](https://docs.unity3d.com/6000.5/Documentation/ScriptReference/Object.Destroy.html) that copy after the respawn time, so the pieces don't stay in the scene forever
+
+3. It waits for the next physics step, so the new pieces are part of the physics simulation before any force is applied to them
+
+4. It goes through every `Rigidbody` in the copy and applies an [AddExplosionForce <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>](https://docs.unity3d.com/6000.5/Documentation/ScriptReference/Rigidbody.AddExplosionForce.html) as an impulse from the impact point. Pieces closer to where the bullet hit get pushed harder. There is no global function to push every `Rigidbody` in an area, so each piece has to get the force on its own
+
+5. It waits the respawn time
+
+6. It activates the complete model and the collider again, so the target shows up and can be shot again
+
+The broken model is copied instead of just being activated because its pieces move when they fall. If the original were used, it would have to be moved back piece by piece every time the target respawns.
 
 ---
 
@@ -135,6 +231,21 @@ asd
 
 ### **Obstacle**
 Reusing the target model, give it a fully red material. When a bullet hits this target, it shouldn't be destroyed; instead it should subtract 100 points. Make this obstacle move linearly across the scene. Also add another regular target that also moves around the scene and gives +500 points when it's destroyed by a bullet.
+
+#### **Explanation**
+asd
+
+---
+
+### **Camera**
+The camera has to pivot around the turret. It's controlled with WASD. When the camera touches an obstacle (the ground, for example), it moves closer to the turret until it stops colliding with any obstacle.
+
+These have to be configurable from the Inspector:
+- Vertical sensitivity
+- Horizontal sensitivity
+- Camera distance when it isn't colliding
+
+Example of the camera: [Camera – Example Video](https://i.imgur.com/MoyjbSG.mp4).
 
 #### **Explanation**
 asd

@@ -20,6 +20,7 @@ namespace Remembering
 
       GameObject projectile = Instantiate(_projectile, _muzzlePoint.position, _muzzlePoint.rotation);
       projectile.GetComponent<Rigidbody>().AddForce(projectile.transform.forward * _muzzleForce, ForceMode.Impulse);
+      Destroy(projectile, 3f);
     }
   }
 }
