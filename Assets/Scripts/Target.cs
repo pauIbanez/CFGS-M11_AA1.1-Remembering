@@ -34,7 +34,6 @@ namespace Remembering
     private void OnCollisionEnter(Collision collision)
     {
       if (!_main.activeSelf || !collision.gameObject.CompareTag("Bullet")) return;
-
       StartCoroutine(Break(collision.GetContact(0).point));
     }
 
