@@ -11,6 +11,7 @@ namespace Remembering
   {
     [Header("Config")]
     [SerializeField] private float _respawnTime = 3f;
+    [SerializeField] private int _pointsOnDestroy = 100;
 
     [Header("Objects")]
     [SerializeField] private GameObject _main;
@@ -41,6 +42,8 @@ namespace Remembering
     {
       _main.SetActive(false);
       _collider.enabled = false;
+
+      Score.ModifyScore(_pointsOnDestroy);
 
       GameObject debris = Instantiate(_broken, _broken.transform.position, _broken.transform.rotation);
       debris.SetActive(true);
