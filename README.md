@@ -147,7 +147,8 @@ All destruction is handled in [Target.cs](./Assets/Scripts/Target.cs), which goe
 ](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/SerializeField.html) variables:
 
 - `1` decimal number to store the respawn time (`3` seconds)
-- `1` whole number to store the points the target gives when destroyed (`100` by default)
+- `1` whole number to store the points the target gives when hit (`100` by default, it can be negative to take points away)
+- `1` boolean to stop the target from breaking when hit (`false` by default, used by the [Obstacle](#obstacle))
 - `2` references to the target's children: the complete model and the broken model
 - `2` decimal numbers to store the impact force and the impact radius, used to push the broken pieces away from where the bullet hit
 
@@ -172,7 +173,13 @@ When something collides with the target, [OnCollisionEnter <svg xmlns="http://ww
 
 1. It checks if the object that hit it has the `Bullet` tag and if the complete model is currently visible. If not, it does nothing, so only bullets can destroy the targets and a target can't break twice
 
-2. It starts the `Break` [Coroutine <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+2. It adds the configured points to the total score by calling `Score.ModifyScore` (explained in the [Score](#score) section)
+
+3. It destroys the bullet, so it can't bounce off and hit anything else
+
+4. If the target is set to prevent being destroyed, it stops here
+
+5. Otherwise, it starts the `Break` [Coroutine <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
 	<path d="M0 0h24v24H0z" fill="none" />
 	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
 		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
@@ -188,9 +195,7 @@ The `Break` coroutine does the following:
 
 1. It deactivates the complete model and the target's collider, so nothing can hit the invisible target and the broken pieces don't get stuck inside it
 
-2. It adds the configured points to the total score by calling `Score.ModifyScore` (explained in the [Score](#score) section)
-
-3. It spawns a copy of the broken model in the same position, activates it so the pieces fall, and tells Unity to [Destroy <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+2. It spawns a copy of the broken model in the same position, activates it so the pieces fall, and tells Unity to [Destroy <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
 	<path d="M0 0h24v24H0z" fill="none" />
 	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
 		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
@@ -202,9 +207,9 @@ The `Break` coroutine does the following:
 	</g>
 </svg>](https://docs.unity3d.com/6000.5/Documentation/ScriptReference/Object.Destroy.html) that copy after the respawn time, so the pieces don't stay in the scene forever
 
-4. It waits for the next physics step, so the new pieces are part of the physics simulation before any force is applied to them
+3. It waits for the next physics step, so the new pieces are part of the physics simulation before any force is applied to them
 
-5. It goes through every `Rigidbody` in the copy and applies an [AddExplosionForce <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+4. It goes through every `Rigidbody` in the copy and applies an [AddExplosionForce <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
 	<path d="M0 0h24v24H0z" fill="none" />
 	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
 		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
@@ -216,9 +221,9 @@ The `Break` coroutine does the following:
 	</g>
 </svg>](https://docs.unity3d.com/6000.5/Documentation/ScriptReference/Rigidbody.AddExplosionForce.html) as an impulse from the impact point. Pieces closer to where the bullet hit get pushed harder. There is no global function to push every `Rigidbody` in an area, so each piece has to get the force on its own
 
-6. It waits the respawn time
+5. It waits the respawn time
 
-7. It activates the complete model and the collider again, so the target shows up and can be shot again
+6. It activates the complete model and the collider again, so the target shows up and can be shot again
 
 The broken model is copied instead of just being activated because its pieces move when they fall. If the original were used, it would have to be moved back piece by piece every time the target respawns.
 
@@ -268,7 +273,7 @@ To change the score, other scripts call the `public static` function `ModifyScor
 2. It writes the new total into the UI text
 
 This way, the scripts that give or take points don't need to know anything about the UI. Right now it is called from:
-- [Target.cs](./Assets/Scripts/Target.cs), which adds its configured points when it's destroyed (see the [Destruction](#destruction) section)
+- [Target.cs](./Assets/Scripts/Target.cs), which adds its configured points when a bullet hits it (see the [Destruction](#destruction) section). The obstacle uses the same script with negative points, so it subtracts them (see the [Obstacle](#obstacle) section)
 
 ---
 
@@ -276,7 +281,50 @@ This way, the scripts that give or take points don't need to know anything about
 Reusing the target model, give it a fully red material. When a bullet hits this target, it shouldn't be destroyed; instead it should subtract 100 points. Make this obstacle move linearly across the scene. Also add another regular target that also moves around the scene and gives +500 points when it's destroyed by a bullet.
 
 #### **Explanation**
-asd
+The obstacle and the moving target don't need new hit logic. They reuse [Target.cs](./Assets/Scripts/Target.cs) (see the [Destruction](#destruction) section) with different settings, plus a new script to move them.
+
+Both are saved as prefabs:
+- [TargetBad](./Assets/Prefabs/TargetBad.prefab): the obstacle. It only has the complete model, with the red `Bad` material on all of it. In its `Target` component, the points are set to `-100` and *prevent destroy* is turned on, so when a bullet hits it the score goes down by 100, the bullet disappears and the obstacle stays where it is
+- [TargetGood](./Assets/Prefabs/TargetGood.prefab): the moving target. It is a regular target with the complete and broken models, with the `Good` material on both. In the scene its points are set to `500`, so it gives +500 when it's destroyed
+
+The movement is handled in [MovingTarget.cs](./Assets/Scripts/MovingTarget.cs), which goes on the root object of both prefabs. In this script there are the following `private` but [Serialized <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>
+](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/SerializeField.html) variables:
+
+- `1` array of `Transform` references, the points of the path the object follows
+- `1` decimal number to store the movement speed (`2` for the obstacle, `5` for the moving target)
+
+And this `public` variable:
+- `1` whole number to store the index of the path point the object is currently moving towards
+
+The paths are empty objects in the scene (`BadTargetPath` and `GoodTargetPath`), each with one child per point.
+
+In each update, the script does the following:
+
+1. It moves the object towards the current path point with [Vector3.MoveTowards <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>](https://docs.unity3d.com/6000.5/Documentation/ScriptReference/Vector3.MoveTowards.html), using the configured speed multiplied by `Time.deltaTime` so the speed doesn't depend on the frame rate. This moves it in a straight line and never overshoots the point
+
+2. If the object is within `0.1` units of the point, it moves on to the next point. When it reaches the last point, it goes back to the first one, so the path loops forever
+
+Because the broken pieces are spawned as a copy at the broken model's position at that moment (see the [Destruction](#destruction) section), the moving target breaks wherever it was hit.
 
 ---
 
