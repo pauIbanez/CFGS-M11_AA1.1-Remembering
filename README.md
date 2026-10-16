@@ -147,6 +147,8 @@ All destruction is handled in [Target.cs](./Assets/Scripts/Target.cs), which goe
 ](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/SerializeField.html) variables:
 
 - `1` decimal number to store the respawn time (`3` seconds)
+- `1` whole number to store the points the target gives when hit (`100` by default, it can be negative to take points away)
+- `1` boolean to stop the target from breaking when hit (`false` by default, used by the [Obstacle](#obstacle))
 - `2` references to the target's children: the complete model and the broken model
 - `2` decimal numbers to store the impact force and the impact radius, used to push the broken pieces away from where the bullet hit
 
@@ -171,7 +173,13 @@ When something collides with the target, [OnCollisionEnter <svg xmlns="http://ww
 
 1. It checks if the object that hit it has the `Bullet` tag and if the complete model is currently visible. If not, it does nothing, so only bullets can destroy the targets and a target can't break twice
 
-2. It starts the `Break` [Coroutine <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+2. It adds the configured points to the total score by calling `Score.ModifyScore` (explained in the [Score](#score) section)
+
+3. It destroys the bullet, so it can't bounce off and hit anything else
+
+4. If the target is set to prevent being destroyed, it stops here
+
+5. Otherwise, it starts the `Break` [Coroutine <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
 	<path d="M0 0h24v24H0z" fill="none" />
 	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
 		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
@@ -225,7 +233,47 @@ The broken model is copied instead of just being activated because its pieces mo
 When one of the bullets destroys a target, +100 points have to be added to the total score. The total score shows up in the UI at the top center of the screen.
 
 #### **Explanation**
-asd
+The score is handled in [Score.cs](./Assets/Scripts/Score.cs), which goes on an object in the scene. In this script there is the following `private` but [Serialized <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>
+](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/SerializeField.html) variable:
+
+- `1` reference to the `TMP_Text` in the UI that shows the score
+
+And these non-serialized `private` variables:
+- `1` `static` reference to the `Score` instance in the scene
+- `1` whole number to store the current points
+
+The script uses the [Singleton <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>](https://gameprogrammingpatterns.com/singleton.html) pattern, so there is only ever one score and any script can reach it without needing a reference to it.
+
+In `Awake`, it checks if there is already a `Score` instance stored. If there is one and it isn't this one, it destroys this component so there are never two scores. Otherwise, it stores itself as the instance.
+
+To change the score, other scripts call the `public static` function `ModifyScore` with the amount of points to add (a negative amount subtracts them). This function passes the points to the stored instance, which does the following:
+
+1. It adds the points to the current total
+
+2. It writes the new total into the UI text
+
+This way, the scripts that give or take points don't need to know anything about the UI. Right now it is called from:
+- [Target.cs](./Assets/Scripts/Target.cs), which adds its configured points when a bullet hits it (see the [Destruction](#destruction) section). The obstacle uses the same script with negative points, so it subtracts them (see the [Obstacle](#obstacle) section)
 
 ---
 
@@ -233,7 +281,50 @@ asd
 Reusing the target model, give it a fully red material. When a bullet hits this target, it shouldn't be destroyed; instead it should subtract 100 points. Make this obstacle move linearly across the scene. Also add another regular target that also moves around the scene and gives +500 points when it's destroyed by a bullet.
 
 #### **Explanation**
-asd
+The obstacle and the moving target don't need new hit logic. They reuse [Target.cs](./Assets/Scripts/Target.cs) (see the [Destruction](#destruction) section) with different settings, plus a new script to move them.
+
+Both are saved as prefabs:
+- [TargetBad](./Assets/Prefabs/TargetBad.prefab): the obstacle. It only has the complete model, with the red `Bad` material on all of it. In its `Target` component, the points are set to `-100` and *prevent destroy* is turned on, so when a bullet hits it the score goes down by 100, the bullet disappears and the obstacle stays where it is
+- [TargetGood](./Assets/Prefabs/TargetGood.prefab): the moving target. It is a regular target with the complete and broken models, with the `Good` material on both. In the scene its points are set to `500`, so it gives +500 when it's destroyed
+
+The movement is handled in [MovingTarget.cs](./Assets/Scripts/MovingTarget.cs), which goes on the root object of both prefabs. In this script there are the following `private` but [Serialized <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>
+](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/SerializeField.html) variables:
+
+- `1` array of `Transform` references, the points of the path the object follows
+- `1` decimal number to store the movement speed (`2` for the obstacle, `5` for the moving target)
+
+And this `public` variable:
+- `1` whole number to store the index of the path point the object is currently moving towards
+
+The paths are empty objects in the scene (`BadTargetPath` and `GoodTargetPath`), each with one child per point.
+
+In each update, the script does the following:
+
+1. It moves the object towards the current path point with [Vector3.MoveTowards <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>](https://docs.unity3d.com/6000.5/Documentation/ScriptReference/Vector3.MoveTowards.html), using the configured speed multiplied by `Time.deltaTime` so the speed doesn't depend on the frame rate. This moves it in a straight line and never overshoots the point
+
+2. If the object is within `0.1` units of the point, it moves on to the next point. When it reaches the last point, it goes back to the first one, so the path loops forever
+
+Because the broken pieces are spawned as a copy at the broken model's position at that moment (see the [Destruction](#destruction) section), the moving target breaks wherever it was hit.
 
 ---
 
