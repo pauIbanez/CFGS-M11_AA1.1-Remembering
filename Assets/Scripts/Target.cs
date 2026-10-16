@@ -12,6 +12,7 @@ namespace Remembering
     [Header("Config")]
     [SerializeField] private float _respawnTime = 3f;
     [SerializeField] private int _pointsOnDestroy = 100;
+    [SerializeField] private bool _preventDestroy = false;
 
     [Header("Objects")]
     [SerializeField] private GameObject _main;
@@ -35,6 +36,11 @@ namespace Remembering
     private void OnCollisionEnter(Collision collision)
     {
       if (!_main.activeSelf || !collision.gameObject.CompareTag("Bullet")) return;
+
+      Score.ModifyScore(_pointsOnDestroy);
+      Destroy(collision.gameObject);
+      if (_preventDestroy) return;
+
       StartCoroutine(Break(collision.GetContact(0).point));
     }
 
@@ -43,7 +49,6 @@ namespace Remembering
       _main.SetActive(false);
       _collider.enabled = false;
 
-      Score.ModifyScore(_pointsOnDestroy);
 
       GameObject debris = Instantiate(_broken, _broken.transform.position, _broken.transform.rotation);
       debris.SetActive(true);
