@@ -339,4 +339,88 @@ These have to be configurable from the Inspector:
 Example of the camera: [Camera – Example Video](https://i.imgur.com/MoyjbSG.mp4).
 
 #### **Explanation**
-asd
+Everything is in [CameraMovement.cs](./Assets/Scripts/CameraMovement.cs), which goes on the camera. In this script there are the following `private` but [Serialized <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>
+](https://docs.unity3d.com/6000.6/Documentation/ScriptReference/SerializeField.html) variables:
+
+- `1` reference to the turret, the point the camera pivots around
+- `1` decimal number to store the camera distance when it isn't colliding (`5` in the scene)
+- `1` `Vector2` with its own [Tooltip <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>](https://docs.unity3d.com/6000.5/Documentation/ScriptReference/TooltipAttribute.html), storing the horizontal and vertical sensitivity in degrees per second (`20` each in the scene)
+
+And these non-serialized `private` variables:
+- `2` decimal numbers to store the current yaw and pitch of the camera
+
+All variables are private because no other part of our program needs them, but some are serialized so they are configurable from the Inspector.
+
+In each update, the script calls two functions in order: `MoveAround`, to rotate the camera with the input, and then `AvoidCollision`, to place it around the turret.
+
+`MoveAround` does the following:
+
+1. It reads the WASD keys into a direction: W and S go up and down, A and D go left and right
+
+2. It adds that direction, multiplied by the configured sensitivity and `Time.deltaTime`, to the stored yaw and pitch, so the speed doesn't depend on the frame rate. Like in the [Turret movement](#turret-movement) section, each one goes through a controlling `Mathf` function:
+	- The yaw is passed through [Mathf.Repeat <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>](https://docs.unity3d.com/ScriptReference/Mathf.Repeat.html), so it wraps back around to 0 past 360 degrees
+	- The pitch is passed through [Mathf.Clamp <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>](https://docs.unity3d.com/6000.5/Documentation/ScriptReference/Mathf.Clamp.html), limited between `-10` and `80` degrees so the camera can't flip over the top of the turret
+
+3. It sets the camera's rotation from the new yaw and pitch
+
+`AvoidCollision` does the following:
+
+1. It takes the opposite of the camera's forward direction. Since `MoveAround` already set the rotation this frame, this direction is up to date, and since the camera is always placed behind the turret along it, it is always looking at the turret
+
+2. It casts a [Physics.Raycast <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+	<path d="M0 0h24v24H0z" fill="none" />
+	<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+		<path stroke-dasharray="42" d="M11 5h-6v14h14v-6">
+		</path>
+		<path stroke-dasharray="12" d="M13 11l7 -7">
+		</path>
+		<path stroke-dasharray="8" d="M21 3h-6M21 3v6">
+		</path>
+	</g>
+</svg>](https://docs.unity3d.com/6000.5/Documentation/ScriptReference/Physics.Raycast.html) from the turret in that direction, as long as the configured distance
+
+3. If the ray hits something (the ground, for example), the camera is placed on the point it hit, so it gets closer to the turret and never ends up behind the obstacle
+
+4. If it doesn't hit anything, the camera is placed at the configured distance from the turret
+
+The order of the two calls matters: if `AvoidCollision` ran first, it would use last frame's rotation and the camera would lag one frame behind the input. The camera is placed from scratch every frame instead of being moved, so as soon as the obstacle is out of the way it goes straight back to the configured distance.

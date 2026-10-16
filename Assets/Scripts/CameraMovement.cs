@@ -21,9 +21,12 @@ namespace Remembering
 
     private void Update()
     {
-
       MoveAround();
+      AvoidCollision();
+    }
 
+    private void AvoidCollision()
+    {
       Vector3 inverseDir = transform.forward * -1;
 
       RaycastHit hit;
@@ -35,7 +38,6 @@ namespace Remembering
       {
         transform.position = _turret.transform.position + inverseDir * _distanceToTurret;
       }
-
     }
 
 
