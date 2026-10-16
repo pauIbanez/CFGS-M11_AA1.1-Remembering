@@ -1382,6 +1382,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 5779023}
     m_Modifications:
     - target: {fileID: 1092434201884004836, guid: 7ba00396ed9cc5c448e40ed51f0e140f, type: 3}
+      propertyPath: _broken
+      value: 
+      objectReference: {fileID: 1083692846}
+    - target: {fileID: 1092434201884004836, guid: 7ba00396ed9cc5c448e40ed51f0e140f, type: 3}
       propertyPath: _pointsOnDestroy
       value: 500
       objectReference: {fileID: 0}
@@ -1481,6 +1485,11 @@ MonoBehaviour:
   - {fileID: 156467974}
   _speed: 5
   currentIndex: 0
+--- !u!1 &1083692846 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6222048547524215956, guid: 7ba00396ed9cc5c448e40ed51f0e140f, type: 3}
+  m_PrefabInstance: {fileID: 1083692842}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1100642112 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2142529583023756278, guid: e718596efea32c74babe33fd905139e2, type: 3}
